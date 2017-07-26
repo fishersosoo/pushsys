@@ -1,0 +1,22 @@
+{% extends "bases.html" %}
+{% block jumbotron %}
+    <table class="table table-striped" id="message_table">
+        <thead>
+        <tr>
+            <td>消息名称</td>
+            <td>明细（可以下拉）</td>
+            <td>添加说明与否</td>
+            <td>预览信息</td>
+            <td>发给自己</td>
+            <td>发给负责人</td>
+            <td>
+                <button type="button" id="add_message" data-loading-text="Loading..." class="btn btn-primary btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    添加消息（弹出模态框）
+                </button>
+            </td>
+        </tr>
+        </thead>
+    </table>
+{% endblock %}

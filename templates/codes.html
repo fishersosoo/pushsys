@@ -1,0 +1,80 @@
+{% extends "bases.html" %}
+
+{% block jumbotron %}
+    文件夹：
+    <div class="dropdown" style="display: inline">
+        <button id="dLabel" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            当前文件夹
+        </button>
+        <ul class="dropdown-menu" id="dir_list" aria-labelledby="dLabel">
+            <li>1</li>
+            <li>3</li>
+            <li>2</li>
+        </ul>
+    </div>
+    <input type="file" id="code_upload" style="display: inline"/>
+    <button type="button" id="upload" data-loading-text="Loading..." class="btn btn-primary" autocomplete="off"
+            style="display: inline">
+        上传
+    </button>
+    <button type="button" id="show" data-loading-text="Loading..." class="btn btn-primary" autocomplete="off"
+            style="display: inline;float:right ">
+        展示
+    </button>
+    <table class="table table-striped" id="code_table">
+        <thead>
+        <tr>
+            <th>文件名称</th>
+            <th>最近修改时间</th>
+            <th>文件大小</th>
+            <th>脚本</th>
+            <th>编辑器</th>
+            <th>log</th>
+            <th>运行/取消</th>
+            <th>删除</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>xxx.py</td>
+            <td>xxxx-xx-xx</td>
+            <td>1k</td>
+            <td>
+                <button type="button" id="download_code" data-loading-text="Loading..." class="btn btn-primary btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    下载
+                </button>
+            <td>
+                <button type="button" id="edit_code" data-loading-text="Loading..." class="btn btn-primary btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    编辑
+                </button>
+            </td>
+            <td>
+                <button type="button" id="download_log" data-loading-text="Loading..." class="btn btn-primary btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    下载
+                </button>
+            </td>
+            <td>
+                <button type="button" id="run" data-loading-text="Loading..." class="btn btn-danger btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    运行
+                </button>
+            </td>
+                        <td>
+                <button type="button" id="delete" data-loading-text="Loading..." class="btn btn-warning btn-sm"
+                        autocomplete="off"
+                        style="display: inline">
+                    删除
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+{% endblock %}
