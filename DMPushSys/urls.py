@@ -16,11 +16,20 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from DMPush.views import code_page, message_page, message_list
+from DMPush.views import code_page, message_page, message_list_api, message_api, message_delete_api, norm_api, \
+    norm_delete_api, norm_list_api, code_file_api
 
 urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
+    # page
     url(r'^code/', code_page),
     url(r'^messagelist/', message_page),
-    url(r'^message_list/', message_list),
+    # rest api
+    url(r'^message_list/$', message_list_api),
+    url(r'^message/$', message_api),
+    url(r'^message_delete/$', message_delete_api),
+    url(r"norm_list/$", norm_list_api),
+    url(r'^norm/$', norm_api),
+    url(r'^norm_delete/$', norm_delete_api),
+    url(r'^code_file/$', code_file_api),
 ]

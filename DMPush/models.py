@@ -1,4 +1,6 @@
 # coding=utf-8
+import json
+
 from DMPushSys.settings import collection
 
 
@@ -57,5 +59,5 @@ class Message(DMBaseModel):
 
 
 class Norm(DMBaseModel):
-    fields = ["belong_message", "name", "app_module", "app_template", "app_client", "app_room", "app_name",
+    fields = ["belong_message", "name", "module", "template_id", "terminal_id", "room_id", "app_name",
               "table_name", "field", "incharge", "phone"]
