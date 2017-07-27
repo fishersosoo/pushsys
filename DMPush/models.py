@@ -1,6 +1,8 @@
 # coding=utf-8
 import json
 
+from bson import ObjectId
+
 from DMPushSys.settings import collection
 
 
@@ -33,11 +35,18 @@ class DMBaseModel(object):
         for key in kwargs:
             if key not in cls.fields:
                 raise KeyError("key " + str(key) + " not in fields")
-        kwargs.update(data_type=cls.__name__)
-        result = collection.find(kwargs)
-        if result.count() == 0:
-            return None
-        return cls(**(result[0]))
+        if "_id" in kwargs.keys():
+            print "_id:",kwargs["_id"]
+            result = collection.find_one({"_id":ObjectId(kwargs["_id"])})
+            if result==None:
+                return None
+            return cls(**result)
+        else:
+            kwargs.update(data_type=cls.__name__)
+            result = collection.find(kwargs)
+            if result.count() == 0:
+                return None
+            return cls(**(result[0]))
 
     @classmethod
     def find_all(cls, **kwargs):
@@ -55,9 +64,9 @@ class DMBaseModel(object):
 
 
 class Message(DMBaseModel):
-    fields = ["name", "app", "desc", "module", "people_list"]
+    fields = ["name", "app", "desc", "module", "people_list","_id"]
 
 
 class Norm(DMBaseModel):
     fields = ["belong_message", "name", "module", "template_id", "terminal_id", "room_id", "app_name",
-              "table_name", "field", "incharge", "phone"]
+              "table_name", "field", "incharge", "phone","_id"]
