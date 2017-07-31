@@ -9,7 +9,7 @@ from DMPushSys.settings import collection
 class DMBaseModel(object):
     def __init__(self, **kwargs):
         for key in self.__class__.fields:
-            if key not in kwargs.keys():
+            if key not in kwargs.keys() and key != "_id":
                 raise KeyError("key " + str(key) + " is required")
         self.__dict__.update(kwargs)
 
@@ -26,6 +26,8 @@ class DMBaseModel(object):
             if key not in self.__class__.fields:
                 raise KeyError("key " + str(key) + " not in fields")
         self.__dict__.update(data_type=self.__class__.__name__)
+        if "_id" in kwargs.keys():
+            kwargs.pop("_id")
         collection.update(self.__dict__, {"$set": kwargs})
         for key, value in kwargs.iteritems():
             self.__dict__[key] = value
@@ -36,9 +38,9 @@ class DMBaseModel(object):
             if key not in cls.fields:
                 raise KeyError("key " + str(key) + " not in fields")
         if "_id" in kwargs.keys():
-            print "_id:",kwargs["_id"]
-            result = collection.find_one({"_id":ObjectId(kwargs["_id"])})
-            if result==None:
+            print "_id:", kwargs["_id"]
+            result = collection.find_one({"_id": ObjectId(kwargs["_id"])})
+            if result == None:
                 return None
             return cls(**result)
         else:
@@ -56,17 +58,21 @@ class DMBaseModel(object):
         kwargs.update(data_type=cls.__name__)
         results = collection.find(kwargs)
         if results.count() == 0:
-            return None
+            return list()
         object_list = list()
         for result in results:
             object_list.append(cls(**result))
         return object_list
 
+    @property
+    def id(self):
+        return self._id
+
 
 class Message(DMBaseModel):
-    fields = ["name", "app", "desc", "module", "people_list","_id"]
+    fields = ["name", "app", "desc", "module", "people_list", "_id"]
 
 
 class Norm(DMBaseModel):
     fields = ["belong_message", "name", "module", "template_id", "terminal_id", "room_id", "app_name",
-              "table_name", "field", "incharge", "phone","_id"]
+              "table_name", "field", "incharge", "phone", "_id", "threshold"]

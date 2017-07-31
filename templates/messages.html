@@ -1,22 +1,192 @@
 {% extends "bases.html" %}
-{% block jumbotron %}
-    <table class="table table-striped" id="message_table">
-        <thead>
-        <tr>
-            <td>消息名称</td>
-            <td>明细（可以下拉）</td>
-            <td>添加说明与否</td>
-            <td>预览信息</td>
-            <td>发给自己</td>
-            <td>发给负责人</td>
-            <td>
-                <button type="button" id="add_message" data-loading-text="Loading..." class="btn btn-primary btn-sm"
-                        autocomplete="off"
-                        style="display: inline">
-                    添加消息（弹出模态框）
-                </button>
-            </td>
-        </tr>
-        </thead>
-    </table>
+{% block extra_head %}
+
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div id="toolbar">
+            <button id="addMessage" class="btn btn-primary" style="display: inline-block">
+                <i class="glyphicon glyphicon-plus"></i> Add
+            </button>
+            <br/>
+            <form class="form-inline" style="display: inline-block">
+                <div class="form-group">
+                    <label class="control-label" for="date">数据来源日期</label>
+                    <input type="date" dataformatas="yyyy/mm/dd" class="form-control" id="date"
+                           placeholder="xxxx/xx/xx" >
+                </div>
+{#                <div class="form-group">#}
+{#                    <label for="time" class="control-label">输入每日消息发送时间</label>#}
+{#                    <input type="time" id="time" class="form-control" data-date-format="hh:ii">#}
+{#                </div>#}
+            </form>
+        </div>
+
+        <table id="table"
+               class="table-no-bordered"
+               data-toolbar="#toolbar"
+               data-search="true"
+               data-show-refresh="true"
+               data-show-toggle="true"
+               data-show-columns="true"
+               data-detail-view="true"
+               data-detail-formatter="detailFormatter"
+               data-minimum-count-columns="2"
+               data-unique-id="_id"
+               data-show-footer="false"
+               data-url="/message_list"
+               data-response-handler="responseHandler"
+        >
+        </table>
+    </div>
+
+{% endblock %}
+{% block modals %}
+    <!-- 新增消息 -->
+    <div class="modal fade" id="newMessageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">消息</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="messageName">信息名称</label>
+                            <input class="form-control" id="messageName" placeholder="消息名称" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="messageApp">产品</label>
+                            <select class="form-control" id="messageApp">
+                                <option>cc</option>
+                                <option>BOBO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="messageModule">APP来源module</label>
+                            <select class="form-control" id="messageModule">
+                                <option>all</option>
+                                <option>ent</option>
+                                <option>game</option>
+                                <option>pc</option>
+                                <option>dating</option>
+                                <option>live</option>
+                                <option>web</option>
+                                <option>mobile</option>
+                                <option>bobo_monitor</option>
+                                <option>bohe_monitor</option>
+                                <option>momo_monitor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="messageDesc">说明</label>
+                            <textarea class="form-control" id="messageDesc"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="peopleList">联系人列表</label>
+                            <textarea class="form-control" id="peopleList"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button id="editMessageSave" class="btn btn-primary" data-dismiss="modal">保存</button>
+                    <button id="newMessageSave" class="btn btn-primary" data-dismiss="modal">新建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 指标模态框 -->
+    <div class="modal fade" id="newNormModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">指标</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">发送指标名称</label>
+                            <input class="form-control" id="name" placeholder="发送指标名称" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="module">APP来源module</label>
+                            <select class="form-control" id="module">
+                                <option>all</option>
+                                <option>ent</option>
+                                <option>game</option>
+                                <option>pc</option>
+                                <option>dating</option>
+                                <option>live</option>
+                                <option>web</option>
+                                <option>mobile</option>
+                                <option>bobo_monitor</option>
+                                <option>bohe_monitor</option>
+                                <option>momo_monitor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="template_id">APP来源模板</label>
+                            <select class="form-control" id="template_id">
+                                <option>all</option>
+                                <option>ent</option>
+                                <option>game</option>
+                                <option>dating</option>
+                                <option>live</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="terminal_id">APP来源终端</label>
+                            <select class="form-control" id="terminal_id">
+                                <option>all</option>
+                                <option>pc</option>
+                                <option>web</option>
+                                <option>moblile</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="room_id">APP来源房间</label>
+                            <input class="form-control" id="room_id" placeholder="APP来源房间" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="app_name">APP指标名称</label>
+                            <input class="form-control" id="app_name" placeholder="APP指标名称" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="table_name">来源表名</label>
+                            <input class="form-control" id="table_name" placeholder="来源表名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="field">来源字段</label>
+                            <input class="form-control" id="field" placeholder="来源字段" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="threshold">警告阈值%</label>
+                            <input type="number" class="form-control" id="threshold" placeholder="0表示无阈值" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incharge">数据表负责人</label>
+                            <input class="form-control" id="incharge" placeholder="数据表负责人" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">负责人电话</label>
+                            <input class="form-control" id="phone" placeholder="负责人电话" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button id="editNormSave" class="btn btn-primary" data-dismiss="modal">保存</button>
+                    <button id="newNormSave" class="btn btn-primary" data-dismiss="modal">新建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_src %}
+    <script src="/static/js/Message.js"></script>
 {% endblock %}

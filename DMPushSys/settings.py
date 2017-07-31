@@ -43,7 +43,10 @@ INSTALLED_APPS = (
     "django_mongoengine",
     'DMPush',
 )
-
+global_config = {
+    "staffId": "g7079",
+    "phone": "13610019895"
+}
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,9 +86,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.dummy',
     }
 }
-conn = MongoClient("10.255.207.118",27017)
-db=conn.cc_system
-db.authenticate("liangzhanning","liangzhanning##20170713")
+conn = MongoClient("10.255.207.118", 27017)
+db = conn.cc_system
+db.authenticate("liangzhanning", "liangzhanning##20170713")
 collection = db.messages_send
 MONGODB_DATABASES = {
     "default": {

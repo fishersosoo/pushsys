@@ -8,7 +8,8 @@
         <title>DM数据推送系统</title>
         <meta name="author" content="">
         <link rel="stylesheet" href="/static/css/bootstrap.css">
-
+        <link rel="stylesheet" href="/static/css/bootstrap-table.css">
+        <link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.css">
         <style type="text/css">
             body {
                 padding-top: 60px;
@@ -16,20 +17,32 @@
         </style>
         <script src="/static/js/jquery-3.2.1.min.js"></script>
         <script src="/static/js/bootstrap.js"></script>
+        <script src="/static/js/bootstrap-table.js"></script>
+        <script src="/static/js/bootstrap-table-zh-CN.js"></script>
+        <script src="/static/js/bootstrap-table-editable.js"></script>
+        <script src="/static/js/bootstrap-editable.js"></script>
+        <script src="/static/js/bootstrap-table-export.js"></script>
+        <script src="/static/js/tableExport.js"></script>
+        <script src="/static/js/bootstrap-datetimepicker.js"></script>
+        <script src="/static/js/bootstrap-datetimepicker.zh-CN.js"></script>
         {% block extra_head %}{% endblock %}
     {% endblock %}
 </head>
 
 <body>
 {% block body %}
+    {% block content %}
+        <div class="container">
+            <div class="jumbotron">
 
-    <div class="container">
-        <div class="jumbotron">
-
-            {% block jumbotron %}
-            {% endblock %}
+                {% block jumbotron %}
+                {% endblock %}
+            </div>
         </div>
-    </div>
+    {% endblock %}
+    {% block modals %}
+    {% endblock %}
+    {% block extra_src %}{% endblock %}
 {% endblock %}
 </body>
 </html>
