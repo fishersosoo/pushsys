@@ -4,7 +4,8 @@
 var $table = $('#table'),
     $add = $('#addMessage'),
     $peopleTable = $("#peopleList");
-function loadPeopleList() {
+function loadPeopleList(val) {
+    //加载联系人列表
     $.get(
         "/people_group/",
         {},
@@ -20,6 +21,7 @@ function loadPeopleList() {
                 select.append("<option>" + group["group_name"] + "</option>");
                 $("#group option:last").data("people_list", group["people_list"]);
             }
+            select.val(val);
         }
     )
 }
@@ -434,7 +436,7 @@ window.operateEvents = {
         for (k in people_list) {
             people.push({"name": k, "phone": people_list[k]});
         }
-        loadPeopleList();
+        loadPeopleList("");
         $peopleTable.bootstrapTable("load", people);
         $("#messageName").val(row["name"]);
         $("#messageApp").val(row["app"]);
@@ -442,6 +444,7 @@ window.operateEvents = {
         $("#messageDesc").val(row["desc"]);
         $("#newMessageModal").data("index", index);
         $("#newMessageModal").data("row", row);
+        $("#group_name").val("");
         $("#newMessageModal").modal("show");
         $("#editMessageSave").show();
         $("#newMessageSave").hide();
@@ -538,9 +541,9 @@ $add.on('click', function (e) {
     // $("#peopleList").val("");
     initPeopleTable();
     $peopleTable.bootstrapTable("removeAll");
-    loadPeopleList();
+    loadPeopleList("");
     //新联系人
-
+    $("#group_name").val("");
     $("#newMessageModal").modal("show");
     $("#editMessageSave").hide();
     $("#newMessageSave").show();
@@ -776,7 +779,6 @@ $("#new_group").on('click', function (e) {
             people[people_list[x]["name"]] = people_list[x]["phone"];
         }
     }
-    alert(JSON.stringify(people));
     $.post(
         "/people_group/",
         {
@@ -788,7 +790,8 @@ $("#new_group").on('click', function (e) {
                 alert(data["errmsg"])
                 return;
             }
-            loadPeopleList();
+            loadPeopleList($("#group_name").val());
+            $("#group_name").val("");
         }
     )
     //保存新联系人组
