@@ -168,6 +168,16 @@ initSubTable = function initNormTable(index, row, $detail) {
     })
     $(addButton).on('click', function (e) {
         // alert(this);
+        body = $("#newNormModal")
+        input_fields = $(body.find("input"));
+        for (var i = 0; i < input_fields.length; ++i) {
+            field = $(input_fields[i]);
+            field.val("");
+        }
+        select_fields = $(body.find("select"));
+        for (var i = 0; i < select_fields.length; ++i) {
+            field.val("");
+        }
         $("#newNormModal").modal("show");
         $("#editNormSave").hide();
         $("#newNormSave").show();
@@ -176,7 +186,7 @@ initSubTable = function initNormTable(index, row, $detail) {
         $("#newNormSave").on('click', function (e) {
             // alert("newNormSave");
             data = {};
-            body = $("#newNormModal")
+
             input_fields = $(body.find("input"));
             for (var i = 0; i < input_fields.length; ++i) {
                 field = $(input_fields[i]);
