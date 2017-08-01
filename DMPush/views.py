@@ -14,7 +14,7 @@ from DMPush.apifunction import format_message, get_current_user, send_message, M
 from serialize import jsonfy, load
 
 # Create your views here.
-from DMPush.models import Message, Norm
+from DMPush.models import Message, Norm, JobTimmer
 from DMPushSys.settings import collection, global_config
 
 
@@ -44,6 +44,12 @@ def message_list_api(request):
         messages = Message.find_all(**query)
         if len(messages) == 0:
             return JSONResponse(jsonfy({"errmsg": "not found"}))
+        for message in messages:
+            job = JobTimmer.find_one(message_id=ObjectId(message.id))
+            if job is not None:
+                message.__dict__["timer"] = job.run_time
+            else:
+                message.__dict__["timer"] = ""
         return JSONResponse(jsonfy(messages))
 
 
@@ -100,6 +106,9 @@ def message_delete_api(request):
         norms = Norm.find_all(belong_message=ObjectId(query["_id"]))
         for norm in norms:
             norm.remove()
+        jobs = JobTimmer.find_all(message_id=ObjectId(query["_id"]))
+        for job in jobs:
+            job.remove()
         return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'errmsg': 'ok'}))
 
 
@@ -138,7 +147,7 @@ def norm_delete_api(request):
             query[key] = value
         norm = Norm.find_one(**query)
         if norm is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'errmsg': 'not found'}))
         norm.remove()
         return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
 
@@ -238,3 +247,40 @@ def send_others_api(request):
         else:
             error_msg += u"\n全部成功"
         return JSONResponse(jsonfy({"errmsg": error_msg}))
+
+
+@api_view(["GET"])
+def job_list_api(request):
+    if request.method == 'GET':
+        query = dict()
+        for key, value in request.GET.iteritems():
+            if key != "order":
+                query[key] = value
+        jobs = JobTimmer.find_all(**query)
+        if len(jobs) == 0:
+            return JSONResponse(jsonfy([]))
+        return JSONResponse(jsonfy(jobs))
+
+
+@api_view(["POST"])
+def job_add_api(request):
+    if request.method == 'POST':
+        message_id = request.POST.get("message_id")
+        run_time = request.POST.get("run_time")
+        job = JobTimmer.find_one(message_id=ObjectId(message_id))
+        if job is not None:
+            job.remove()
+        job = JobTimmer(message_id=ObjectId(message_id), run_time=run_time)
+        job.save()
+        return JSONResponse(jsonfy(job))
+
+
+@api_view(["POST"])
+def job_del_api(request):
+    if request.method == 'POST':
+        message_id = request.POST.get("message_id")
+        job = JobTimmer.find_one(message_id=ObjectId(message_id))
+        if job is not None:
+            job.remove()
+            return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
+        return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'errmsg': 'not found'}))

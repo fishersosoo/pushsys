@@ -76,3 +76,7 @@ class Message(DMBaseModel):
 class Norm(DMBaseModel):
     fields = ["belong_message", "name", "module", "template_id", "terminal_id", "room_id", "app_name",
               "table_name", "field", "incharge", "phone", "_id", "threshold"]
+
+
+class JobTimmer(DMBaseModel):
+    fields = ["_id", "message_id", "run_time"]

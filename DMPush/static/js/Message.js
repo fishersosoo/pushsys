@@ -4,7 +4,6 @@
 var $table = $('#table'),
     $add = $('#addMessage'),
     $peopleTable = $("#peopleList");
-
 function initPeopleTable() {
     $peopleTable.bootstrapTable({
         uniqueId: "name",
@@ -201,8 +200,6 @@ initSubTable = function initNormTable(index, row, $detail) {
     return cur_table;
 }
 function initTable() {
-
-
     $table.bootstrapTable({
         height: getHeight(),
         columns: [
@@ -247,7 +244,13 @@ function initTable() {
                     align: 'center',
                     events: send_othersEvents,
                     formatter: send_othersFormatter
-                },
+                }, {
+                field: 'timer',
+                title: '定时执行',
+                align: 'center',
+                // events: operateEvents,
+                // formatter: operateFormatter
+            },
                 {
                     field: 'operate',
                     title: '操作',
@@ -255,6 +258,7 @@ function initTable() {
                     events: operateEvents,
                     formatter: operateFormatter
                 }
+
             ]
         ]
     });
@@ -331,6 +335,7 @@ function send_meFormatter(value, row, index) {
     ].join('');
 }
 //发给负责人显示内容
+
 function send_othersFormatter(value, row, index) {
     return [
         '<a class="send_others" href="javascript:void(0)" title="send_others">',
@@ -367,6 +372,9 @@ function modifyNormFormatter(value, row, index) {
 //操作列显示内容
 function operateFormatter(value, row, index) {
     return [
+        '<a class="time" href="javascript:void(0)" title="time">',
+        '<i class="glyphicon glyphicon-time"></i>',
+        '</a>  ',
         '<a class="edit" href="javascript:void(0)" title="Like">',
         '<i class="glyphicon glyphicon-pencil"></i>',
         '</a>  ',
@@ -406,6 +414,36 @@ window.operateEvents = {
                 $table.bootstrapTable("removeByUniqueId", row["_id"]);
             }
         );
+    },
+    'click .time': function (e, value, row, index) {
+        //定时执行设置
+        if (row["timer"] !== "") {
+            $.post(
+                "/job_del/",
+                {
+                    "message_id": row["_id"]
+                },
+                function (data, textStatus, jqXHR) {
+                    $table.bootstrapTable("updateCell", {'index': index, "field": "timer", "value": ""})
+                }
+            );
+        }
+        else {
+            if ($("#time").val() === "") {
+                alert("请输入时间")
+                return
+            }
+            $.post(
+                "/job_add/",
+                {
+                    "message_id": row["_id"],
+                    "run_time": $("#time").val()
+                },
+                function (data, textStatus, jqXHR) {
+                    $table.bootstrapTable("updateCell", {'index': index, "field": "timer", "value": data["run_time"]})
+                }
+            );
+        }
     }
 };
 window.send_meEvents = {
@@ -529,7 +567,7 @@ window.modifyNormEvents = {
                 $(this_table).bootstrapTable("removeByUniqueId", row["_id"]);
             }
         );
-        alert("removesub");
+        // alert("removesub");
         e.stopPropagation();
     }
 }
