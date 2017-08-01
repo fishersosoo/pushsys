@@ -2,7 +2,48 @@
  * Created by gzs10558 on 2017/7/27.
  */
 var $table = $('#table'),
-    $add = $('#addMessage');
+    $add = $('#addMessage'),
+    $peopleTable = $("#peopleList");
+
+function initPeopleTable() {
+    $peopleTable.bootstrapTable({
+        uniqueId: "name",
+        columns: [
+            {
+                field: "name",
+                title: "姓名",
+                editable: true,
+                align: 'center',
+            },
+            {
+                field: "phone",
+                title: "手机",
+                editable: true,
+                align: 'center',
+            },
+            {
+                field: 'delete',
+                title: '删除',
+                align: 'center',
+                events: deletePeopleEvents,
+                formatter: deletePeopleFormatter
+            }
+        ]
+    })
+    ;
+    //修改联系人信息保存
+    $peopleTable.on('editable-save.bs.table', function (e, field, row, old, $el) {
+        if (field == "name") {
+            peoplelist = $peopleTable.bootstrapTable('getData');
+            for (i = 0; i < peoplelist.length; ++i) {
+                if (peoplelist[i]["name"] == row["name"] && peoplelist[i] != row) {
+                    alert("重复联系人");
+                    $peopleTable.bootstrapTable("removeByUniqueId", row["name"]);
+                }
+            }
+        }
+    });
+}
 initSubTable = function initNormTable(index, row, $detail) {
     // alert();
     var parentid = row["_id"];
@@ -305,6 +346,13 @@ function previewFormatter(value, row, index) {
         '</a>  '
     ].join('');
 }
+function deletePeopleFormatter(value, row, index) {
+    return [
+        '<a class="remove" href="javascript:void(0)" title="Remove">',
+        '<i class="glyphicon glyphicon-remove"></i>',
+        '</a>'
+    ].join('');
+}
 //修改指标显示内容
 function modifyNormFormatter(value, row, index) {
     return [
@@ -331,16 +379,17 @@ function operateFormatter(value, row, index) {
 window.operateEvents = {
     //修改消息
     'click .edit': function (e, value, row, index) {
+        initPeopleTable();
         var people_list = JSON.parse(row["people_list"]);
-        var people_list_string = "";
+        var people = [];
         for (k in people_list) {
-            people_list_string += (k + "," + people_list[k] + "\n");
+            people.push({"name": k, "phone": people_list[k]});
         }
+        $peopleTable.bootstrapTable("load", people);
         $("#messageName").val(row["name"]);
         $("#messageApp").val(row["app"]);
         $("#messageModule").val(row["module"]);
         $("#messageDesc").val(row["desc"]);
-        $("#peopleList").val(people_list_string);
         $("#newMessageModal").data("index", index);
         $("#newMessageModal").modal("show");
         $("#editMessageSave").show();
@@ -365,7 +414,7 @@ window.send_meEvents = {
             "/send_me/",
             {
                 "id": row["_id"],
-                "date":$("#date").val()
+                "date": $("#date").val()
             },
             function (data) {
                 alert(JSON.stringify(data))
@@ -380,7 +429,7 @@ window.previewEvents = {
             "/message_str/",
             {
                 "id": row["_id"],
-                "date":$("#date").val()
+                "date": $("#date").val()
             },
             function (data) {
                 alert(data["message"])
@@ -395,7 +444,7 @@ window.send_othersEvents = {
             "/send_others/",
             {
                 "id": row["_id"],
-                "date":$("#date").val()
+                "date": $("#date").val()
             },
             function (data) {
                 alert(data["errmsg"])
@@ -409,7 +458,11 @@ $add.on('click', function (e) {
     $("#messageApp").val("");
     $("#messageModule").val("");
     $("#messageDesc").val("");
-    $("#peopleList").val("");
+    // $("#peopleList").val("");
+    initPeopleTable();
+    $peopleTable.bootstrapTable("removeAll");
+    //新联系人
+
     $("#newMessageModal").modal("show");
     $("#editMessageSave").hide();
     $("#newMessageSave").show();
@@ -480,18 +533,23 @@ window.modifyNormEvents = {
         e.stopPropagation();
     }
 }
+//删除联系人事件
+window.deletePeopleEvents = {
+    'click .remove': function (e, value, row, index) {
+        $peopleTable.bootstrapTable("remove", {field: 'name', values: [row["name"]]});
+        e.stopPropagation();
+    }
+}
 
 //修改消息保存
 $("#editMessageSave").on("click", function (e) {
-    people_list_text = $("#peopleList").val();
-    lines = (people_list_text.split("\n"));
     var people = {};
-    for (var x = 0; x < lines.length; ++x) {
-        var line = lines[x];
-        var fields = line.split(",");
-        people[fields[0]] = fields[1];
+    var people_list = $peopleTable.bootstrapTable("getData");
+    for (var x = 0; x < people_list.length; ++x) {
+        if ($.trim(people_list[x]["name"]) !== "" && $.trim(people_list[x]["phone"]) !== "") {
+            people[people_list[x]["name"]] = people_list[x]["phone"];
+        }
     }
-    ;
     // alert(people["one"]);
     // alert(JSON.stringify(people))
     $.post(
@@ -504,23 +562,19 @@ $("#editMessageSave").on("click", function (e) {
             "people_list": JSON.stringify(people)
         },
         function (data, textStatus, jqXHR) {
-            $table.bootstrapTable("updateRow", $("#newMessageModal").data("index"), data);
+            $table.bootstrapTable("refresh", {silent: true});
         }
     )
 });
 //新建消息保存
 $("#newMessageSave").on("click", function (e) {
-    people_list_text = $("#peopleList").val();
-    lines = (people_list_text.split("\n"));
     var people = {};
-    for (var x = 0; x < lines.length; ++x) {
-        var line = lines[x];
-        var fields = line.split(",");
-        people[fields[0]] = fields[1];
+    var people_list = $peopleTable.bootstrapTable("getData");
+    for (var x = 0; x < people_list.length; ++x) {
+        if ($.trim(people_list[x]["name"]) !== "" && $.trim(people_list[x]["phone"]) !== "") {
+            people[people_list[x]["name"]] = people_list[x]["phone"];
+        }
     }
-    ;
-    // alert(people["one"]);
-    // alert(JSON.stringify(people))
     $.post(
         "/message/",
         {
@@ -602,4 +656,8 @@ function getScript(url, callback) {
 
     // We handle everything using the script element injection
     return undefined;
+}
+
+function addPeople(e) {
+    $peopleTable.bootstrapTable("append", ({"name": "", "phone": ""}))
 }
