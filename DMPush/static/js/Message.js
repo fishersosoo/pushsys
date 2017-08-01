@@ -69,6 +69,11 @@ initSubTable = function initNormTable(index, row, $detail) {
         showRefresh: true,
         showToggle: true,
         showColumns: true,
+        rowAttributes: function (row, index) {
+            return {
+                class: 'active'
+            };
+        },
         columns: [
             {
                 field: "_id",
@@ -176,7 +181,13 @@ initSubTable = function initNormTable(index, row, $detail) {
         }
         select_fields = $(body.find("select"));
         for (var i = 0; i < select_fields.length; ++i) {
-            field.val("");
+            field = $(select_fields[i]);
+            // alert(field.attr("id"));
+            if (field.attr("id") == "module") {
+                // alert($(this).data("parentid"))
+                // alert($table.bootstrapTable("getRowByUniqueId", $(this).data("parentid")))
+                field.val($table.bootstrapTable("getRowByUniqueId", $(this).data("parentid"))["module"]);
+            }
         }
         $("#newNormModal").modal("show");
         $("#editNormSave").hide();
