@@ -372,14 +372,14 @@ function send_othersFormatter(value, row, index) {
 //预览消息列显示内容
 function previewFormatter(value, row, index) {
     return [
-        '<a class="preview" href="javascript:void(0)" title="Like">',
+        '<a class="preview" href="javascript:void(0)" title="预览">',
         '<i class="glyphicon glyphicon-option-horizontal"></i>',
         '</a>  '
     ].join('');
 }
 function deletePeopleFormatter(value, row, index) {
     return [
-        '<a class="remove" href="javascript:void(0)" title="Remove">',
+        '<a class="remove" href="javascript:void(0)" title="删除">',
         '<i class="glyphicon glyphicon-remove"></i>',
         '</a>'
     ].join('');
@@ -387,10 +387,10 @@ function deletePeopleFormatter(value, row, index) {
 //修改指标显示内容
 function modifyNormFormatter(value, row, index) {
     return [
-        '<a class="edit" href="javascript:void(0)" title="Like">',
+        '<a class="edit" href="javascript:void(0)" title="修改">',
         '<i class="glyphicon glyphicon-pencil"></i>',
         '</a>  ',
-        '<a class="remove" href="javascript:void(0)" title="Remove">',
+        '<a class="remove" href="javascript:void(0)" title="删除">',
         '<i class="glyphicon glyphicon-remove"></i>',
         '</a>'
     ].join('');
@@ -398,10 +398,10 @@ function modifyNormFormatter(value, row, index) {
 //操作列显示内容
 function operateFormatter(value, row, index) {
     return [
-        '<a class="edit" href="javascript:void(0)" title="Like">',
+        '<a class="edit" href="javascript:void(0)" title="修改">',
         '<i class="glyphicon glyphicon-pencil"></i>',
         '</a>  ',
-        '<a class="remove" href="javascript:void(0)" title="Remove">',
+        '<a class="remove" href="javascript:void(0)" title="删除">',
         '<i class="glyphicon glyphicon-remove"></i>',
         '</a>'
     ].join('');
@@ -422,6 +422,7 @@ window.operateEvents = {
         $("#messageModule").val(row["module"]);
         $("#messageDesc").val(row["desc"]);
         $("#newMessageModal").data("index", index);
+        $("#newMessageModal").data("row", row);
         $("#newMessageModal").modal("show");
         $("#editMessageSave").show();
         $("#newMessageSave").hide();
@@ -548,7 +549,7 @@ window.modifyNormEvents = {
         $("#editNormSave").unbind();
         $("#editNormSave").on('click', function (e) {
             // alert("editNormSave");
-            data = {};
+            data = {"_id": row["_id"]};
             body = $("#newNormModal")
             input_fields = $(body.find("input"));
             for (var i = 0; i < input_fields.length; ++i) {
@@ -572,7 +573,13 @@ window.modifyNormEvents = {
                         alert(data["errmsg"])
                         return;
                     }
-                    $("#sub_" + $("#editNormSave").data("parentid")).bootstrapTable("refresh", {silent: true});
+                    for (k in data) {
+                        row[k] = data[k];
+                    }
+                    $("#sub_" + $("#editNormSave").data("parentid")).bootstrapTable("updateRow", {
+                        "index": index,
+                        "row": row
+                    });
                 }
             )
         });
@@ -615,11 +622,14 @@ $("#editMessageSave").on("click", function (e) {
             people[people_list[x]["name"]] = people_list[x]["phone"];
         }
     }
+    row = $("#newMessageModal").data("row")
+    index = $("#newMessageModal").data("index")
     // alert(people["one"]);
     // alert(JSON.stringify(people))
     $.post(
         "/message/",
         {
+            "_id": row["_id"],
             "name": $("#messageName").val(),
             "app": $("#messageApp").val(),
             "module": $("#messageModule").val(),
@@ -631,7 +641,11 @@ $("#editMessageSave").on("click", function (e) {
                 alert(data["errmsg"])
                 return;
             }
-            $table.bootstrapTable("refresh", {silent: true});
+
+            for (k in data) {
+                row[k] = data[k];
+            }
+            $table.bootstrapTable("updateRow", {"index": index, "row": row});
         }
     )
 });

@@ -97,7 +97,7 @@ def message_delete_api(request):
         if message is None:
             return JSONResponse(jsonfy({"errmsg": "not found"}))
         message.remove()
-        norms = Norm.find_all(belong_message=ObjectId(query["_id"]))
+        norms = Norm.find_all(belong_message=(query["_id"]))
         for norm in norms:
             norm.remove()
         return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
