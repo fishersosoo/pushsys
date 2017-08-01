@@ -17,7 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 from DMPush.views import code_page, message_page, message_list_api, message_api, message_delete_api, norm_api, \
-    norm_delete_api, norm_list_api, message_str_api, send_me_api, send_others_api
+    norm_delete_api, norm_list_api, message_str_api, send_me_api, send_others_api, people_group_api
 
 urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
@@ -34,4 +34,5 @@ urlpatterns = [
     url(r'^message_str/$', message_str_api),
     url(r'^send_me/$', send_me_api),
     url(r'^send_others/$', send_others_api),
+    url(r'^people_group/$', people_group_api),
 ]

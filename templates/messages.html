@@ -85,17 +85,33 @@
                             <textarea class="form-control" id="messageDesc"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="peopleList">联系人列表
+                            <label for="peopleList"><h4><b>联系人列表
                                 <a id="addPeople" href="javascript:addPeople(0)" title="add">
                                     <i class="glyphicon glyphicon-plus"></i>
-                                </a>
+                                </a></b>
+                            </h4>
                             </label>
-{#                            <textarea class="form-control" id="peopleList"></textarea>#}
-                            <table id="peopleList">
-                            </table>
                         </div>
-
                     </form>
+                    <form class="form-inline">
+                        <div class="form-group input-group-sm">
+                            <label for="group">联系人组</label>
+                            <select class="form-control" id="group">
+                            </select>
+                        </div>
+                        <div class="form-group input-group-sm" style="float: right">
+                            <button type="button" id="new_group" class="btn btn-default btn-sm">
+                                保存到组
+                            </button>
+                        </div>
+                        <div class="form-group input-group-sm" style="float: right">
+                            <label for="group_name">组名</label>
+                            <input class="form-control" id="group_name">
+                        </div>
+                    </form>
+                    <p></p>
+                    <table id="peopleList">
+                    </table>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>

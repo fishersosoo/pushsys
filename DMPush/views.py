@@ -14,7 +14,7 @@ from DMPush.apifunction import format_message, get_current_user, send_message, M
 from serialize import jsonfy, load
 
 # Create your views here.
-from DMPush.models import Message, Norm
+from DMPush.models import Message, Norm, PeopleGroup
 from DMPushSys.settings import collection, global_config
 
 
@@ -214,3 +214,21 @@ def send_others_api(request):
         else:
             error_msg += u"\n全部成功"
         return JSONResponse(jsonfy({"errmsg": error_msg}))
+
+
+@api_view(["GET", "POST"])
+def people_group_api(request):
+    if request.method == "GET":
+        groups = PeopleGroup.find_all()
+        return JSONResponse(jsonfy(groups))
+    elif request.method == "POST":
+        group_name = request.POST.get('group_name')
+        people_list =load( request.POST.get("people_list"))
+        print people_list
+        group = PeopleGroup.find_one(group_name=group_name)
+        if group is None:
+            group = PeopleGroup(group_name=group_name, people_list=people_list)
+            group.save()
+        else:
+            group.update(people_list=people_list)
+        return JSONResponse(jsonfy(group))

@@ -4,7 +4,25 @@
 var $table = $('#table'),
     $add = $('#addMessage'),
     $peopleTable = $("#peopleList");
-
+function loadPeopleList() {
+    $.get(
+        "/people_group/",
+        {},
+        function (data) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
+            select = $("#group");
+            select.empty();
+            for (i = 0; i < data.length; ++i) {
+                group = data[i];
+                select.append("<option>" + group["group_name"] + "</option>");
+                $("#group option:last").data("people_list", group["people_list"]);
+            }
+        }
+    )
+}
 function initPeopleTable() {
     $peopleTable.bootstrapTable({
         uniqueId: "name",
@@ -38,7 +56,7 @@ function initPeopleTable() {
             for (i = 0; i < peoplelist.length; ++i) {
                 if (peoplelist[i]["name"] == row["name"] && peoplelist[i] != row) {
                     alert("重复联系人");
-                    $peopleTable.bootstrapTable("removeByUniqueId", row["name"]);
+                    // $peopleTable.bootstrapTable("removeByUniqueId", row["name"]);
                 }
             }
         }
@@ -416,6 +434,7 @@ window.operateEvents = {
         for (k in people_list) {
             people.push({"name": k, "phone": people_list[k]});
         }
+        loadPeopleList();
         $peopleTable.bootstrapTable("load", people);
         $("#messageName").val(row["name"]);
         $("#messageApp").val(row["app"]);
@@ -519,6 +538,7 @@ $add.on('click', function (e) {
     // $("#peopleList").val("");
     initPeopleTable();
     $peopleTable.bootstrapTable("removeAll");
+    loadPeopleList();
     //新联系人
 
     $("#newMessageModal").modal("show");
@@ -748,3 +768,37 @@ function getScript(url, callback) {
 function addPeople(e) {
     $peopleTable.bootstrapTable("append", ({"name": "", "phone": ""}))
 }
+$("#new_group").on('click', function (e) {
+    var people = {};
+    var people_list = $peopleTable.bootstrapTable("getData");
+    for (var x = 0; x < people_list.length; ++x) {
+        if ($.trim(people_list[x]["name"]) !== "" && $.trim(people_list[x]["phone"]) !== "") {
+            people[people_list[x]["name"]] = people_list[x]["phone"];
+        }
+    }
+    alert(JSON.stringify(people));
+    $.post(
+        "/people_group/",
+        {
+            "group_name": $("#group_name").val(),
+            "people_list": JSON.stringify(people)
+        },
+        function (data, textStatus, jqXHR) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
+            loadPeopleList();
+        }
+    )
+    //保存新联系人组
+})
+$("#group").on("change", function (e) {
+    people_list = $(this).children('option:selected').data("people_list");
+    var people = [];
+    for (k in people_list) {
+        people.push({"name": k, "phone": people_list[k]});
+    }
+    $peopleTable.bootstrapTable("load", people);
+
+})
