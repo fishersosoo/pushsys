@@ -410,6 +410,10 @@ window.operateEvents = {
 };
 window.send_meEvents = {
     'click .send_me': function (e, value, row, index) {
+        if ($("#date").val() === "") {
+            alert("选择数据时间")
+            return
+        }
         $.get(
             "/send_me/",
             {
@@ -424,7 +428,10 @@ window.send_meEvents = {
 };
 window.previewEvents = {
     'click .preview': function (e, value, row, index) {
-        alert("preview");
+        if ($("#date").val() === "") {
+            alert("选择数据时间")
+            return
+        }
         $.get(
             "/message_str/",
             {
@@ -439,7 +446,10 @@ window.previewEvents = {
 }
 window.send_othersEvents = {
     'click .send_others': function (e, value, row, index) {
-        alert("send_othersEvents");
+        if ($("#date").val() === "") {
+            alert("选择数据时间")
+            return
+        }
         $.get(
             "/send_others/",
             {
