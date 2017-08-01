@@ -214,6 +214,10 @@ initSubTable = function initNormTable(index, row, $detail) {
                 "/norm/",
                 data,
                 function (data, textStatus, jqXHR) {
+                    if (data["errmsg"]) {
+                        alert(data["errmsg"])
+                        return;
+                    }
                     cur_table.bootstrapTable("prepend", data);
                 }
             )
@@ -295,7 +299,10 @@ function initTable() {
             $.post("/norm/",
                 data,
                 function (data, textStatus, jqXHR) {
-                    ;
+                    if (data["errmsg"]) {
+                        alert(data["errmsg"])
+                        return;
+                    }
                 },
                 "json")
             e.stopPropagation();
@@ -316,7 +323,10 @@ function initTable() {
         $.post("/message/",
             data,
             function (data, textStatus, jqXHR) {
-                ;
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
             },
             "json")
 
@@ -424,6 +434,10 @@ window.operateEvents = {
                 "_id": row["_id"]
             },
             function (data, textStatus, jqXHR) {
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
                 $table.bootstrapTable("removeByUniqueId", row["_id"]);
             }
         );
@@ -442,6 +456,10 @@ window.send_meEvents = {
                 "date": $("#date").val()
             },
             function (data) {
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
                 alert(JSON.stringify(data))
             }
         )
@@ -460,6 +478,10 @@ window.previewEvents = {
                 "date": $("#date").val()
             },
             function (data) {
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
                 alert(data["message"])
             }
         )
@@ -478,6 +500,10 @@ window.send_othersEvents = {
                 "date": $("#date").val()
             },
             function (data) {
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
                 alert(data["errmsg"])
             }
         )
@@ -542,6 +568,10 @@ window.modifyNormEvents = {
                 "/norm/",
                 data,
                 function (data, textStatus, jqXHR) {
+                    if (data["errmsg"]) {
+                        alert(data["errmsg"])
+                        return;
+                    }
                     $("#sub_" + $("#editNormSave").data("parentid")).bootstrapTable("refresh", {silent: true});
                 }
             )
@@ -557,6 +587,10 @@ window.modifyNormEvents = {
                 "_id": row["_id"]
             },
             function (data, textStatus, jqXHR) {
+                if (data["errmsg"]) {
+                    alert(data["errmsg"])
+                    return;
+                }
                 $(this_table).bootstrapTable("removeByUniqueId", row["_id"]);
             }
         );
@@ -593,6 +627,10 @@ $("#editMessageSave").on("click", function (e) {
             "people_list": JSON.stringify(people)
         },
         function (data, textStatus, jqXHR) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
             $table.bootstrapTable("refresh", {silent: true});
         }
     )
@@ -616,6 +654,10 @@ $("#newMessageSave").on("click", function (e) {
             "people_list": JSON.stringify(people)
         },
         function (data, textStatus, jqXHR) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
             $table.bootstrapTable("prepend", data);
         }
     )
