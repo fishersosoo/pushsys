@@ -15,6 +15,7 @@ from serialize import jsonfy, load
 
 # Create your views here.
 from DMPush.models import Message, Norm, PeopleGroup
+from DMPush.models import Message, Norm, JobTimmer
 from DMPushSys.settings import collection, global_config
 
 
@@ -44,6 +45,12 @@ def message_list_api(request):
         messages = Message.find_all(**query)
         if len(messages) == 0:
             return JSONResponse(jsonfy({"errmsg": "not found"}))
+        for message in messages:
+            job = JobTimmer.find_one(message_id=ObjectId(message.id))
+            if job is not None:
+                message.__dict__["timer"] = job.run_time
+            else:
+                message.__dict__["timer"] = ""
         return JSONResponse(jsonfy(messages))
 
 
@@ -100,6 +107,9 @@ def message_delete_api(request):
         norms = Norm.find_all(belong_message=(query["_id"]))
         for norm in norms:
             norm.remove()
+        jobs = JobTimmer.find_all(message_id=ObjectId(query["_id"]))
+        for job in jobs:
+            job.remove()
         return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
 
 
@@ -154,6 +164,11 @@ def message_str_api(request):
             return JSONResponse(jsonfy({'message': format_message(message_id=message_id,
                                                                   date=datetime.datetime.strptime(date,
                                                                                                   "%Y-%m-%d").date())}))
+        except KeyError, e:
+            errmsg = ""
+            for norm in e.message:
+                errmsg += norm.name + ", "
+            return JSONResponse(jsonfy({"errmsg": errmsg + u"\n指标无法从APP接口获取"}))
         except Exception, e:
             return JSONResponse(jsonfy({"errmsg": "数据出错"}))
 
@@ -168,9 +183,14 @@ def send_me_api(request):
             message_str = format_message(message_id=message_id,
                                          date=datetime.datetime.strptime(date,
                                                                          "%Y-%m-%d").date())
-            return JSONResponse(jsonfy(send_message(phone=current_user.get("phone"),
+            return JSONResponse((send_message(phone=current_user.get("phone"),
                                                     msg=message_str,
                                                     user_num=global_config.get("staffId"))))
+        except KeyError, e:
+            errmsg = ""
+            for norm in e.message:
+                errmsg += norm.name + ", "
+            return JSONResponse(jsonfy({"errmsg": errmsg + u"\n指标无法从APP接口获取"}))
         except Exception, e:
             return JSONResponse(jsonfy({"errmsg": "出错"}))
 
@@ -186,13 +206,27 @@ def send_others_api(request):
                                          date=datetime.datetime.strptime(date,
                                                                          "%Y-%m-%d").date(),
                                          ignore_missing=False)
+        except KeyError, e:
+            errmsg = ""
+            for norm in e.message:
+                errmsg += norm.name + ", "
+            return JSONResponse(jsonfy({"errmsg": errmsg + u"\n指标无法从APP接口获取"}))
         except MissingValueError, e:
-            missing_norm = e.norm
-            error_msg = missing_norm.app_name + u"数据缺失"
-            send_message(phone=missing_norm.phone,
-                         msg=error_msg,
-                         user_num=global_config.get("staffId"))
-            return JSONResponse({"errmsg": error_msg})
+            errmsg = u"""以下指标数据缺失:\n"""
+            for missing_norm in e.norm:
+                errmsg += missing_norm.name+","
+                error_msg = u"""指标数据缺失
+app指标名:{app_name}
+来源表:{table_name}
+来源字段:{field}
+缺失日期:{date}
+                """.format(app_name=missing_norm.app_name, table_name=missing_norm.table_name, field=missing_norm.field,
+                           date=date)
+                send_message(phone=missing_norm.phone,
+                             msg=error_msg,
+                             user_num=global_config.get("staffId"))
+            print errmsg
+            return JSONResponse(jsonfy({"errmsg": errmsg}))
         fail_list = []
         success_list = []
         people_list = Message.find_one(_id=message_id).people_list
@@ -223,7 +257,7 @@ def people_group_api(request):
         return JSONResponse(jsonfy(groups))
     elif request.method == "POST":
         group_name = request.POST.get('group_name')
-        people_list =load( request.POST.get("people_list"))
+        people_list = load(request.POST.get("people_list"))
         print people_list
         group = PeopleGroup.find_one(group_name=group_name)
         if group is None:
@@ -232,3 +266,40 @@ def people_group_api(request):
         else:
             group.update(people_list=people_list)
         return JSONResponse(jsonfy(group))
+
+
+@api_view(["GET"])
+def job_list_api(request):
+    if request.method == 'GET':
+        query = dict()
+        for key, value in request.GET.iteritems():
+            if key != "order":
+                query[key] = value
+        jobs = JobTimmer.find_all(**query)
+        if len(jobs) == 0:
+            return JSONResponse(jsonfy([]))
+        return JSONResponse(jsonfy(jobs))
+
+
+@api_view(["POST"])
+def job_add_api(request):
+    if request.method == 'POST':
+        message_id = request.POST.get("message_id")
+        run_time = request.POST.get("run_time")
+        job = JobTimmer.find_one(message_id=ObjectId(message_id))
+        if job is not None:
+            job.remove()
+        job = JobTimmer(message_id=ObjectId(message_id), run_time=run_time)
+        job.save()
+        return JSONResponse(jsonfy(job))
+
+
+@api_view(["POST"])
+def job_del_api(request):
+    if request.method == 'POST':
+        message_id = request.POST.get("message_id")
+        job = JobTimmer.find_one(message_id=ObjectId(message_id))
+        if job is not None:
+            job.remove()
+            return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
+        return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'errmsg': 'not found'}))

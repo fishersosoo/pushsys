@@ -80,3 +80,7 @@ class Norm(DMBaseModel):
 
 class PeopleGroup(DMBaseModel):
     fields = ["group_name", "people_list", "_id"]
+
+
+class JobTimmer(DMBaseModel):
+    fields = ["_id", "message_id", "run_time"]
