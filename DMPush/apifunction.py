@@ -93,7 +93,7 @@ def format_message(message_id=None, date=datetime.date.today(), ignore_missing=T
         raise MissingValueError(missing_norms)
     if isOverThreshold:
         message_str += "\n" + message.desc
-        message_str = message_str.replace(u"￥", u"")
+    message_str = message_str.replace(u"￥", u"")
     return message_str
 
 
