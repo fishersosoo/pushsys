@@ -10,7 +10,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from DMPush.apifunction import format_message, get_current_user, send_message, MissingValueError
+from DMPush.apifunction import format_message, get_current_user, send_message, MissingValueError, OverThresholdError
 from serialize import jsonfy, load
 
 # Create your views here.
@@ -91,6 +91,10 @@ def message_api(request):
             return JSONResponse(jsonfy(message))
         else:
             message.update(**query)
+            if "module" in query:
+                norms = Norm.find_all(belong_message=str(message.id))
+                for norm in norms:
+                    norm.update(module=query["module"])
             return JSONResponse(jsonfy(message))
 
 
@@ -164,6 +168,8 @@ def message_str_api(request):
             return JSONResponse(jsonfy({'message': format_message(message_id=message_id,
                                                                   date=datetime.datetime.strptime(date,
                                                                                                   "%Y-%m-%d").date())}))
+        except ValueError, e:
+            return JSONResponse(jsonfy({"errmsg": e.message}))
         except KeyError, e:
             errmsg = ""
             for norm in e.message:
@@ -184,15 +190,17 @@ def send_me_api(request):
                                          date=datetime.datetime.strptime(date,
                                                                          "%Y-%m-%d").date())
             return JSONResponse((send_message(phone=current_user.get("phone"),
-                                                    msg=message_str,
-                                                    user_num=global_config.get("staffId"))))
+                                              msg=message_str,
+                                              user_num=global_config.get("staffId"))))
+        except ValueError, e:
+            return JSONResponse(jsonfy({"errmsg": e.message}))
         except KeyError, e:
             errmsg = ""
             for norm in e.message:
                 errmsg += norm.name + ", "
             return JSONResponse(jsonfy({"errmsg": errmsg + u"\n指标无法从APP接口获取"}))
-        except Exception, e:
-            return JSONResponse(jsonfy({"errmsg": "出错"}))
+            # except Exception, e:
+            #     return JSONResponse(jsonfy({"errmsg": "出错"}))
 
 
 @api_view(["GET"])
@@ -205,7 +213,9 @@ def send_others_api(request):
             message_str = format_message(message_id=message_id,
                                          date=datetime.datetime.strptime(date,
                                                                          "%Y-%m-%d").date(),
-                                         ignore_missing=False)
+                                         check=True)
+        except ValueError, e:
+            return JSONResponse(jsonfy({"errmsg": e.message}))
         except KeyError, e:
             errmsg = ""
             for norm in e.message:
@@ -214,19 +224,14 @@ def send_others_api(request):
         except MissingValueError, e:
             errmsg = u"""以下指标数据缺失:\n"""
             for missing_norm in e.norm:
-                errmsg += missing_norm.name+","
-                error_msg = u"""指标数据缺失
-app指标名:{app_name}
-来源表:{table_name}
-来源字段:{field}
-缺失日期:{date}
-                """.format(app_name=missing_norm.app_name, table_name=missing_norm.table_name, field=missing_norm.field,
-                           date=date)
-                send_message(phone=missing_norm.phone,
-                             msg=error_msg,
-                             user_num=global_config.get("staffId"))
-            print errmsg
+                errmsg += missing_norm.name + ","
             return JSONResponse(jsonfy({"errmsg": errmsg}))
+        except OverThresholdError, e:
+            errmsg = u"""以下指标超过阈值:\n"""
+            for missing_norm in e.norm:
+                errmsg += missing_norm.name + ","
+            return JSONResponse(jsonfy({"errmsg": errmsg}))
+        # 数据合格，给领导发送
         fail_list = []
         success_list = []
         people_list = Message.find_one(_id=message_id).people_list
