@@ -4,42 +4,44 @@
 var $table = $('#table'),
     $add = $('#addMessage'),
     $peopleTable = $("#peopleList");
-Date.prototype.pattern=function(fmt) {
+Date.prototype.pattern = function (fmt) {
     var o = {
-    "M+" : this.getMonth()+1, //月份
-    "d+" : this.getDate(), //日
-    "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时
-    "H+" : this.getHours(), //小时
-    "m+" : this.getMinutes(), //分
-    "s+" : this.getSeconds(), //秒
-    "q+" : Math.floor((this.getMonth()+3)/3), //季度
-    "S" : this.getMilliseconds() //毫秒
+        "M+": this.getMonth() + 1, //月份
+        "d+": this.getDate(), //日
+        "h+": this.getHours() % 12 == 0 ? 12 : this.getHours() % 12, //小时
+        "H+": this.getHours(), //小时
+        "m+": this.getMinutes(), //分
+        "s+": this.getSeconds(), //秒
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+        "S": this.getMilliseconds() //毫秒
     };
     var week = {
-    "0" : "/u65e5",
-    "1" : "/u4e00",
-    "2" : "/u4e8c",
-    "3" : "/u4e09",
-    "4" : "/u56db",
-    "5" : "/u4e94",
-    "6" : "/u516d"
+        "0": "/u65e5",
+        "1": "/u4e00",
+        "2": "/u4e8c",
+        "3": "/u4e09",
+        "4": "/u56db",
+        "5": "/u4e94",
+        "6": "/u516d"
     };
-    if(/(y+)/.test(fmt)){
-        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+    if (/(y+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
     }
-    if(/(E+)/.test(fmt)){
-        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[this.getDay()+""]);
+    if (/(E+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, ((RegExp.$1.length > 1) ? (RegExp.$1.length > 2 ? "/u661f/u671f" : "/u5468") : "") + week[this.getDay() + ""]);
     }
-    for(var k in o){
-        if(new RegExp("("+ k +")").test(fmt)){
-            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+    for (var k in o) {
+        if (new RegExp("(" + k + ")").test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
         }
     }
     return fmt;
 };
 
 var Today = new Date();
-$("#date").val((Today.pattern("yyyy-MM-dd")));
+var Yesterday = new Date();
+Yesterday.setDate(Yesterday.getDate() - 1);
+$("#date").val((Yesterday.pattern("yyyy-MM-dd")));
 function loadPeopleList(val) {
     //加载联系人列表
     $.get(
@@ -109,7 +111,7 @@ initSubTable = function initNormTable(index, row, $detail) {
         ' <i class="glyphicon glyphicon-plus"></i> Add' +
         '</button>' +
         '</div>' +
-        '<table class="table table-striped"></table>'
+        '<table class="table table-striped" data-editable-mode="inline"></table>'
     ).find('table');
     var addButton = $detail.find(" button");
     $(cur_table).attr("id", "sub_" + parentid);
@@ -366,6 +368,9 @@ function initTable() {
                 },
                 "json")
             e.stopPropagation();
+        });
+        $(subTable).on('editable-shown.bs.table', function (editable, field, row, $el) {
+            $(subTable).bootstrapTable("resetWidth");
         });
     });
     $table.on('all.bs.table', function (e, name, args) {
