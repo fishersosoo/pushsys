@@ -8,6 +8,9 @@
             <button id="addMessage" class="btn btn-primary" style="display: inline-block">
                 <i class="glyphicon glyphicon-plus"></i> Add
             </button>
+            <button id="productBtn" class="btn btn-default" style="display: inline-block">
+                <i class="glyphicon glyphicon-time"></i> 设置产品定时
+            </button>
             <br/>
             <form class="form-inline" style="display: inline-block">
                 <div class="form-group">
@@ -15,10 +18,10 @@
                     <input type="date" dataformatas="yyyy/mm/dd" class="form-control" id="date"
                            placeholder="xxxx/xx/xx">
                 </div>
-                <div class="form-group">
-                    <label for="time" class="control-label">输入每日消息发送时间</label>
-                    <input type="time" id="time" class="form-control" data-date-format="hh:ii">
-                </div>
+{#                <div class="form-group">#}
+{#                    <label for="time" class="control-label">输入每日消息发送时间</label>#}
+{#                    <input type="time" id="time" class="form-control" data-date-format="hh:ii">#}
+{#                </div>#}
             </form>
         </div>
 
@@ -205,6 +208,79 @@
                     <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
                     <button id="editNormSave" class="btn btn-primary" data-dismiss="modal">保存</button>
                     <button id="newNormSave" class="btn btn-primary" data-dismiss="modal">新建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 产品模态框 -->
+    <div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">产品定时设置</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="productToolbar">
+                        <button id="addProduct" class="btn btn-primary" style="display: inline-block">
+                            <i class="glyphicon glyphicon-plus"></i> Add
+                        </button>
+                        <br/>
+                    </div>
+                    <table id="productList"
+                           data-url="/product_list"
+                           data-id-field="_id"
+                           data-toolbar="#productToolbar"
+                           data-unique-id="_id"
+                           data-show-refresh="true">
+                        <thead>
+                        <tr>
+                            <th class="col-md-1" data-field="_id" data-sortable="true" data-align="center"
+                                data-visible="false">id
+                            </th>
+                            <th class="col-md-4" data-field="name" data-editable="true" data-align="center">Name</th>
+                            <th class="col-md-7" data-field="run_time" data-editable="true" data-editable-mode="inline"
+                                data-editable-type="time">执行时间
+                            </th>
+                            <script>
+                                function removeFormatter(value, row, index) {
+                                    return [
+                                        '<a class="remove" href="javascript:void(0)" title="删除">',
+                                        '<i class="glyphicon glyphicon-remove"></i>',
+                                        '</a>'
+                                    ].join('');
+                                }
+                            </script>
+                            <script>
+                                window.removeEvents = {
+                                    'click .remove': function (e, value, row, index) {
+                                        alert(JSON.stringify(row))
+                                        $.post(
+                                            "/product_delete/",
+                                            {
+                                                "_id": row["_id"]
+                                            },
+                                            function (data, textStatus, jqXHR) {
+                                                if (data["errmsg"]) {
+                                                    alert(data["errmsg"])
+                                                    return;
+                                                }
+                                                $("#productList").bootstrapTable("removeByUniqueId", row["_id"]);
+                                            }
+                                        );
+                                    }
+                                }
+                            </script>
+                            <th class="col-md-7" data-field="remove" data-formatter=removeFormatter
+                                data-events=removeEvents>删除
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>

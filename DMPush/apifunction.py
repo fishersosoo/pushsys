@@ -1,11 +1,13 @@
 # coding=utf-8
 import json
-
 import datetime
+
+import logging
 import requests
 
-from DMPush.models import Message, Norm
-from DMPushSys.settings import global_config
+from DMPush.decorators import logged
+from DMPush.models import Message, Norm, Product
+from DMPushSys.settings import global_config, sched
 
 
 def get_app_data(**kwargs):
@@ -14,14 +16,55 @@ def get_app_data(**kwargs):
     return json.loads(r.text), r.request.url
 
 
-# print get_app_data(
-#     module="ent",
-#     room_id="all",
-#     template_id="all",
-#     terminal_id="all",
-#     date="2016/03/14",
-#     staffId="g7079"
-# )
+def send_all(**kwargs):
+    messages = Message.find_all(**kwargs)
+    date = datetime.datetime.strptime(kwargs["date"], "%Y-%m-%d").date() \
+        if "date" in kwargs \
+        else datetime.datetime.now().date() - datetime.timedelta(days=1)
+    for message in messages:
+        try:
+            message_str = format_message(message_id=message.id,
+                                         date=date,
+                                         check=True)
+        except ValueError, e:
+            return {"errmsg": e.message}
+        except KeyError, e:
+            errmsg = ""
+            for norm in e.message:
+                errmsg += norm.name + ", "
+            return {"errmsg": errmsg + u"\n指标无法从APP接口获取"}
+        except MissingValueError, e:
+            errmsg = u"""以下指标数据缺失:\n"""
+            for missing_norm in e.norm:
+                errmsg += missing_norm.name + ","
+            return {"errmsg": errmsg}
+        except OverThresholdError, e:
+            errmsg = u"""以下指标超过阈值:\n"""
+            for missing_norm in e.norm:
+                errmsg += missing_norm.name + ","
+            return {"errmsg": errmsg}
+        people_list = message.people_list
+        # print people_list.__class__
+        for name, phone in json.loads(people_list).iteritems():
+            send_message(phone=phone,
+                         msg=message_str,
+                         user_num=global_config.get("staffId"))
+            # except Exception, e:
+            #     logger.error(e)
+
+
+def startSched():
+    import logging
+    logging.basicConfig()
+    Product.send_func.append(send_all)
+    prodocts = Product.find_all()
+    for prodoct in prodocts:
+        if prodoct.run_time != "":
+            prodoct.add_job()
+    sched.print_jobs()
+    sched.start()
+
+
 def send_missing_alert(missing_norm, date="", message_name=""):
     error_msg = u"""指标数据缺失
 所属消息:\n{message_name};

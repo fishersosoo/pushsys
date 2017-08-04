@@ -6,17 +6,19 @@ import datetime
 from bson import ObjectId
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import render, render_to_response
+from django.utils import log
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from DMPush.apifunction import format_message, get_current_user, send_message, MissingValueError, OverThresholdError
+from DMPush.apifunction import format_message, get_current_user, send_message, MissingValueError, OverThresholdError, \
+    send_all
 from serialize import jsonfy, load
 
 # Create your views here.
-from DMPush.models import Message, Norm, PeopleGroup
+from DMPush.models import Message, Norm, PeopleGroup, Product
 from DMPush.models import Message, Norm, JobTimmer
-from DMPushSys.settings import collection, global_config
+from DMPushSys.settings import collection, global_config, sched
 
 
 class JSONResponse(HttpResponse):
@@ -263,7 +265,7 @@ def people_group_api(request):
     elif request.method == "POST":
         group_name = request.POST.get('group_name')
         people_list = load(request.POST.get("people_list"))
-        print people_list
+        # print people_list
         group = PeopleGroup.find_one(group_name=group_name)
         if group is None:
             group = PeopleGroup(group_name=group_name, people_list=people_list)
@@ -308,3 +310,62 @@ def job_del_api(request):
             job.remove()
             return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))
         return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'errmsg': 'not found'}))
+
+
+@api_view(["GET"])
+def product_list_api(request):
+    if request.method == "GET":
+        query = dict()
+        for key, value in request.GET.iteritems():
+            if key != "order":
+                query[key] = value
+        products = Product.find_all()
+        # for product in products:
+        #     product.remove()
+        return JSONResponse(jsonfy(products))
+
+
+@api_view(["GET", "POST"])
+def product_api(request):
+    product = None
+
+    if request.method == "GET":
+        query = dict()
+        for key, value in request.GET.iteritems():
+            if key != "order":
+                query[key] = value
+            product = Product.find_one(**query)
+            return JSONResponse(jsonfy(product))
+
+    elif request.method == 'POST':
+        # print request.POST
+        query = dict()
+        for key, value in request.POST.iteritems():
+            query[key] = value
+        if "_id" in query.keys() and query["_id"] != u"":
+            product = Product.find_one(_id=ObjectId(query["_id"]))
+        if product is None:
+            # 新增
+            print "new product"
+            if Product.find_one(name=(query["name"])):
+                return JSONResponse(jsonfy({"errmsg": "产品已存在"}))
+            product = Product(**query)
+            product.add_job()
+            product.save()
+            return JSONResponse(jsonfy(product))
+        else:
+            print "edit product"
+            # 修改
+            product.update(**query)
+            return JSONResponse(jsonfy(product))
+
+
+@api_view(["POST"])
+def product_del_api(request):
+    if request.method == "POST":
+        # print request.POST
+        product = Product.find_one(_id=ObjectId(request.POST.get("_id")))
+        if product is None:
+            return JSONResponse(jsonfy({{"errmsg": "not found"}}))
+        product.remove()
+        return JSONResponse(status=status.HTTP_200_OK, data=jsonfy({'result': 'ok'}))

@@ -11,6 +11,11 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from DMPush.apifunction import startSched, send_all
+from DMPush.models import Product
+from DMPushSys.settings import sched
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DMPushSys.settings")
 
 application = get_wsgi_application()
+startSched()

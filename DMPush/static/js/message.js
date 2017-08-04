@@ -38,10 +38,12 @@ Date.prototype.pattern = function (fmt) {
     return fmt;
 };
 
+
 var Today = new Date();
 var Yesterday = new Date();
 Yesterday.setDate(Yesterday.getDate() - 1);
 $("#date").val((Yesterday.pattern("yyyy-MM-dd")));
+
 function loadPeopleList(val) {
     //加载联系人列表
     $.get(
@@ -63,6 +65,7 @@ function loadPeopleList(val) {
         }
     )
 }
+
 function initPeopleTable() {
     $peopleTable.bootstrapTable({
         uniqueId: "name",
@@ -102,6 +105,7 @@ function initPeopleTable() {
         }
     });
 }
+
 initSubTable = function initNormTable(index, row, $detail) {
     // alert();
     var parentid = row["_id"];
@@ -283,6 +287,7 @@ initSubTable = function initNormTable(index, row, $detail) {
     });
     return cur_table;
 }
+
 function initTable() {
     $table.bootstrapTable({
         height: getHeight(),
@@ -302,6 +307,16 @@ function initTable() {
                     editable: true,
                     align: 'center'
                 }, {
+                field: 'app',
+                title: '产品',
+                sortable: true,
+                align: 'center'
+            }, {
+                field: 'module',
+                title: '模块',
+                sortable: true,
+                align: 'center'
+            }, {
                 field: 'desc',
                 title: '添加说明与否',
                 sortable: true,
@@ -332,6 +347,7 @@ function initTable() {
                 field: 'timer',
                 title: '定时执行',
                 align: 'center',
+                visible: false
                 // events: operateEvents,
                 // formatter: operateFormatter
             },
@@ -418,6 +434,7 @@ function detailFormatter(index, row) {
     });
     return html.join('');
 }
+
 //发给自己显示内容
 function send_meFormatter(value, row, index) {
     return [
@@ -426,6 +443,7 @@ function send_meFormatter(value, row, index) {
         '</a>  '
     ].join('');
 }
+
 //发给负责人显示内容
 function send_othersFormatter(value, row, index) {
     return [
@@ -434,6 +452,7 @@ function send_othersFormatter(value, row, index) {
         '</a>  ',
     ].join('');
 }
+
 //预览消息列显示内容
 function previewFormatter(value, row, index) {
     return [
@@ -442,6 +461,7 @@ function previewFormatter(value, row, index) {
         '</a>  '
     ].join('');
 }
+
 function deletePeopleFormatter(value, row, index) {
     return [
         '<a class="remove" href="javascript:void(0)" title="删除">',
@@ -449,6 +469,7 @@ function deletePeopleFormatter(value, row, index) {
         '</a>'
     ].join('');
 }
+
 //修改指标显示内容
 function modifyNormFormatter(value, row, index) {
     return [
@@ -460,12 +481,13 @@ function modifyNormFormatter(value, row, index) {
         '</a>'
     ].join('');
 }
+
 //操作列显示内容
 function operateFormatter(value, row, index) {
     return [
-        '<a class="time" href="javascript:void(0)" title="time">',
-        '<i class="glyphicon glyphicon-time"></i>',
-        '</a>  ',
+        // '<a class="time" href="javascript:void(0)" title="time">',
+        // '<i class="glyphicon glyphicon-time"></i>',
+        // '</a>  ',
         '<a class="edit" href="javascript:void(0)" title="修改">',
         '<i class="glyphicon glyphicon-pencil"></i>',
         '</a>  ',
@@ -474,11 +496,13 @@ function operateFormatter(value, row, index) {
         '</a>'
     ].join('');
 }
+
 //操作列事件响应
 window.operateEvents = {
     //修改消息
     'click .edit': function (e, value, row, index) {
         initPeopleTable();
+        loadApps()
         var people_list = JSON.parse(row["people_list"]);
         var people = [];
         for (k in people_list) {
@@ -493,6 +517,7 @@ window.operateEvents = {
         $("#newMessageModal").data("index", index);
         $("#newMessageModal").data("row", row);
         $("#group_name").val("");
+
         $("#newMessageModal").modal("show");
         $("#editMessageSave").show();
         $("#newMessageSave").hide();
@@ -610,6 +635,59 @@ window.send_othersEvents = {
         )
     }
 };
+$("#productBtn").on("click", function (e) {
+    $("#productList").bootstrapTable()
+    $("#productList").bootstrapTable("refresh", {"silent": true})
+    $("#productModal").modal("show");
+});
+$("#addProduct").on("click", function (e) {
+    $("#productList").bootstrapTable("append", {"_id": "", "name": "", "run_time": ""})
+})
+$("#productList").on('editable-save.bs.table', function (e, field, row, old, $el) {
+    if (row["name"] === "") {
+        alert("产品名不能为空")
+        row[field] = old
+        e.destroy()
+        return;
+    }
+    var data = {};
+    if (row["_id"] !== "") {
+        data["_id"] = row["_id"];
+    }
+    data[field] = $.trim(row[field]);
+    $.post("/product/",
+        data,
+        function (data, textStatus, jqXHR) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
+            $("#productList").bootstrapTable("refresh", {"silent": true})
+            // alert(JSON.stringify(data))
+        },
+        "json")
+    e.stopPropagation();
+});
+
+function loadApps() {
+    $.get(
+        "/product_list/",
+        {},
+        function (data) {
+            if (data["errmsg"]) {
+                alert(data["errmsg"])
+                return;
+            }
+            select = $("#messageApp");
+            select.empty();
+            for (i = 0; i < data.length; ++i) {
+                group = data[i];
+                select.append("<option>" + group["name"] + "</option>");
+            }
+        }
+    )
+}
+
 //新建消息
 $add.on('click', function (e) {
     $("#messageName").val("");
@@ -622,6 +700,7 @@ $add.on('click', function (e) {
     loadPeopleList("");
     //新联系人
     $("#group_name").val("");
+    loadApps()
     $("#newMessageModal").modal("show");
     $("#editMessageSave").hide();
     $("#newMessageSave").show();
@@ -792,7 +871,7 @@ $(function () {
         ],
         eachSeries = function (arr, iterator, callback) {
             callback = callback || function () {
-                };
+            };
             if (!arr.length) {
                 return callback();
             }
@@ -830,7 +909,7 @@ function getScript(url, callback) {
     // Attach handlers for all browsers
     script.onload = script.onreadystatechange = function () {
         if (!done && (!this.readyState ||
-            this.readyState == 'loaded' || this.readyState == 'complete')) {
+                this.readyState == 'loaded' || this.readyState == 'complete')) {
             done = true;
             if (callback)
                 callback();
@@ -849,6 +928,7 @@ function getScript(url, callback) {
 function addPeople(e) {
     $peopleTable.bootstrapTable("append", ({"name": "", "phone": ""}))
 }
+
 $("#new_group").on('click', function (e) {
     var people = {};
     var people_list = $peopleTable.bootstrapTable("getData");
